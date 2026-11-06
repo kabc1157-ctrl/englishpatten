@@ -1,21 +1,119 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>패턴 스피킹 100 - 영어 회화 패턴 마스터</title>
-    <meta name="description" content="100개 핵심 영어 패턴으로 1,000개 이상의 문장을 즉시 말하는 6단계 회화 훈련 앱. 진단 테스트, 음성 발음 연습, 간격 반복 복습 제공." />
-    <meta property="og:title" content="패턴 스피킹 100 - 영어 회화 패턴 마스터" />
-    <meta property="og:description" content="100개 핵심 영어 패턴으로 1,000개 이상의 문장을 즉시 말하는 6단계 회화 훈련 앱. 진단 테스트, 음성 발음 연습, 간격 반복 복습 제공." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  </head>
-  <body class="bg-[#FFFDF8] text-[#252525] antialiased selection:bg-[#FFBE46]/30 min-h-screen">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F7F6F2">
+  <meta name="description" content="아는 문장에서, 나의 말로. 영어 패턴 회화 학습 서비스 SAYING.">
+  <title>SAYING. — 아는 문장에서, 나의 말로.</title>
+  <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+  <header class="topbar">
+    <button class="brand" type="button" data-nav="home" aria-label="SAYING 홈">
+      <img src="assets/logo.svg" alt="SAYING.">
+    </button>
+    <div class="top-actions">
+      <span class="streak-pill"><span aria-hidden="true">↗</span> 7일 연속</span>
+      <button class="avatar" type="button" data-nav="profile" aria-label="마이페이지">LU</button>
+    </div>
+  </header>
 
+  <main id="main" tabindex="-1">
+    <section class="view active" id="home" aria-labelledby="home-title">
+      <div class="home-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">TODAY · NOV 06</p>
+          <h1 id="home-title">오늘도 한 문장을<br><em>나의 말로.</em></h1>
+          <p class="hero-desc">짧게 시작해도 괜찮아요. 오늘의 패턴을 익히고, 직접 말해보세요.</p>
+        </div>
+
+        <section class="start-card" aria-labelledby="course-heading">
+          <div class="card-heading">
+            <div>
+              <p class="label">오늘의 학습</p>
+              <h2 id="course-heading">얼마나 공부할까요?</h2>
+            </div>
+            <span class="level-badge">초급 · Level 1</span>
+          </div>
+          <div class="duration-tabs" role="radiogroup" aria-label="학습 시간">
+            <button type="button" role="radio" aria-checked="false" data-minutes="10"><strong>10</strong><span>분</span></button>
+            <button class="selected" type="button" role="radio" aria-checked="true" data-minutes="20"><strong>20</strong><span>분</span><small>추천</small></button>
+            <button type="button" role="radio" aria-checked="false" data-minutes="30"><strong>30</strong><span>분</span></button>
+          </div>
+          <div class="course-preview">
+            <span class="course-index">01</span>
+            <div><strong>I want to + 동사원형</strong><span>원하는 것을 자연스럽게 말하기</span></div>
+          </div>
+          <button class="button primary start-button" type="button" id="start-learning">오늘의 학습 시작 <span aria-hidden="true">→</span></button>
+          <p class="resume-note" id="resume-note">약 20분 · 5단계 학습</p>
+        </section>
+
+        <section class="progress-card" aria-labelledby="weekly-title">
+          <div class="section-heading"><div><p class="label">이번 주</p><h2 id="weekly-title">꾸준히 쌓이고 있어요</h2></div><strong>4/5일</strong></div>
+          <div class="week-row" aria-label="주간 학습 현황">
+            <div class="done"><span>월</span><i>✓</i></div><div class="done"><span>화</span><i>✓</i></div><div class="done"><span>수</span><i>✓</i></div><div class="done"><span>목</span><i>✓</i></div><div class="today"><span>금</span><i></i></div><div><span>토</span><i></i></div><div><span>일</span><i></i></div>
+          </div>
+          <div class="progress-line"><span style="width:80%"></span></div>
+        </section>
+
+        <section class="stats-grid" aria-label="학습 요약">
+          <article><span>학습한 패턴</span><strong>18<small>/ 100</small></strong><p>지난주보다 3개 늘었어요</p></article>
+          <article><span>누적 학습 시간</span><strong>6<small>시간</small> 40<small>분</small></strong><p>차곡차곡 쌓는 중</p></article>
+          <article><span>복습할 문장</span><strong>7<small>개</small></strong><button type="button" data-nav="review">지금 복습하기 →</button></article>
+        </section>
+      </div>
+    </section>
+
+    <section class="view learn-view" id="learn" aria-labelledby="learn-heading">
+      <div class="learning-shell">
+        <div class="learning-top">
+          <button class="icon-button" type="button" data-nav="home" aria-label="학습 나가기">×</button>
+          <div class="step-progress" aria-label="학습 진행률"><span id="step-bar"></span></div>
+          <span id="step-count">1 / 5</span>
+        </div>
+        <article class="lesson-card" id="lesson-content"></article>
+      </div>
+    </section>
+
+    <section class="view page-view" id="patterns" aria-labelledby="patterns-heading">
+      <div class="page-head"><p class="eyebrow">PATTERN LIBRARY</p><h1 id="patterns-heading">배운 문장을<br>다시 꺼내보세요.</h1><p>패턴을 누르면 핵심 설명과 활용 문장을 확인할 수 있어요.</p></div>
+      <div class="filter-row" aria-label="난이도 필터"><button class="active" data-level="all">전체 100</button><button data-level="beginner">초급 35</button><button data-level="intermediate">중급 35</button><button data-level="advanced">고급 30</button></div>
+      <div class="pattern-list" id="pattern-list"></div>
+    </section>
+
+    <section class="view page-view" id="review" aria-labelledby="review-heading">
+      <div class="page-head"><p class="eyebrow">SMART REVIEW</p><h1 id="review-heading">잊기 전에,<br>한 번 더.</h1><p>자주 틀린 문장부터 가볍게 복습해요.</p></div>
+      <section class="review-summary"><div><span>오늘의 복습</span><strong>7문장</strong></div><div><span>예상 시간</span><strong>4분</strong></div><button class="button primary" id="review-start">복습 시작 →</button></section>
+      <div class="review-list"><article><span class="priority high">집중</span><div><strong>I'm thinking of + -ing</strong><p>3번 틀렸어요 · 오늘 복습</p></div><span>→</span></article><article><span class="priority">예정</span><div><strong>Would you like to + 동사원형?</strong><p>2일 전에 학습 · 오늘 복습</p></div><span>→</span></article><article><span class="priority calm">안정</span><div><strong>I used to + 동사원형</strong><p>정답률 80% · 내일 복습</p></div><span>→</span></article></div>
+    </section>
+
+    <section class="view page-view" id="room" aria-labelledby="room-heading">
+      <div class="page-head"><p class="eyebrow">STUDY TOGETHER</p><h1 id="room-heading">같이 하면,<br>조금 더 오래.</h1><p>서로의 속도는 달라도 오늘의 공부를 응원할 수 있어요.</p></div>
+      <section class="room-card"><div class="room-members"><div><span class="member-avatar coral">LU</span><strong>루시아</strong><small>오늘 완료 · 20분</small></div><span class="link-mark">↔</span><div><span class="member-avatar dark">JM</span><strong>제이미</strong><small>학습 전 · 중급</small></div></div><div class="room-actions"><button class="button secondary cheer-button">응원 보내기</button><button class="button ghost">초대 코드 보기</button></div></section>
+      <h2 class="subheading">함께 쌓은 기록</h2>
+      <div class="shared-grid"><article><span>함께한 날</span><strong>32일</strong></article><article><span>이번 주 학습</span><strong>7회</strong></article><article><span>공유한 문장</span><strong>24개</strong></article></div>
+    </section>
+
+    <section class="view page-view" id="profile" aria-labelledby="profile-heading">
+      <div class="page-head"><p class="eyebrow">MY SAYING</p><h1 id="profile-heading">나에게 맞는<br>학습 리듬.</h1></div>
+      <section class="settings-card"><div class="profile-line"><span class="member-avatar coral">LU</span><div><strong>루시아</strong><p>lucia@example.com</p></div><button class="button ghost">프로필 수정</button></div><label>학습 레벨<select><option>초급 · 기본 문장과 필수 표현</option><option>중급 · 경험과 의견 설명</option><option>고급 · 뉘앙스와 관용 표현</option></select></label><label>기본 학습 시간<select><option>20분</option><option>10분</option><option>30분</option></select></label><label class="toggle-line"><span><strong>내 문장 공개</strong><small>학습방 친구에게 내가 공유한 문장을 보여줘요.</small></span><input type="checkbox" checked></label></section>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="주요 메뉴">
+    <button class="active" type="button" data-nav="home"><span aria-hidden="true">⌂</span>홈</button>
+    <button type="button" data-nav="patterns"><span aria-hidden="true">□</span>패턴</button>
+    <button type="button" data-nav="review"><span aria-hidden="true">↻</span>복습</button>
+    <button type="button" data-nav="room"><span aria-hidden="true">◇</span>학습방</button>
+    <button type="button" data-nav="profile"><span aria-hidden="true">○</span>MY</button>
+  </nav>
+  <div class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
