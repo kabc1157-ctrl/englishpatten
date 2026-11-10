@@ -268,6 +268,8 @@ document.addEventListener("click", async event => {
   }
 });
 
+document.querySelector("#auth-form")?.addEventListener("submit", event => event.preventDefault());
+
 document.querySelector("#diary-form")?.addEventListener("submit", event => { event.preventDefault(); saveDiary(); });
 document.querySelector("#partner-form")?.addEventListener("submit", event => { event.preventDefault(); sendPartnerInvite(); });
 
