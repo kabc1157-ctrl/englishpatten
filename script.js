@@ -153,9 +153,15 @@ async function initAuth() {
 
 function updateAuthUI() {
   const loggedIn = Boolean(currentUser);
+  const actions = document.querySelector("#auth-form .auth-actions");
+  if (actions && !actions.querySelector("[data-auth=resend]")) {
+    const resend = document.createElement("button");
+    resend.className = "button ghost"; resend.type = "button"; resend.dataset.auth = "resend"; resend.textContent = "인증메일 재발송"; actions.appendChild(resend);
+  }
   document.querySelector("#auth-form [data-auth=login]").hidden = loggedIn;
   document.querySelector("#auth-form [data-auth=signup]").hidden = loggedIn;
   document.querySelector("#auth-form [data-auth=reset]").hidden = loggedIn;
+  document.querySelector("#auth-form [data-auth=resend]").hidden = loggedIn;
   document.querySelector("#auth-form [data-auth=logout]").hidden = !loggedIn;
   document.querySelector("#auth-nickname").hidden = loggedIn;
   document.querySelector("#auth-email").value = loggedIn ? (currentUser.email || "") : "";
@@ -238,8 +244,9 @@ document.addEventListener("click", async event => {
     if (authButton.dataset.auth === "signup") result = await supabase.auth.signUp({ email, password, options: { data: { nickname }, emailRedirectTo: location.href } });
     if (authButton.dataset.auth === "login") result = await supabase.auth.signInWithPassword({ email, password });
     if (authButton.dataset.auth === "reset") result = await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.href });
+    if (authButton.dataset.auth === "resend") result = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: location.href } });
     if (authButton.dataset.auth === "logout") result = await supabase.auth.signOut();
-    if (result?.error) toast(result.error.message); else toast(authButton.dataset.auth === "reset" ? "비밀번호 재설정 이메일을 보냈어요." : "처리되었습니다.");
+    if (result?.error) toast(result.error.message === "Email not confirmed" ? "인증메일 링크를 다시 받아 주세요." : result.error.message); else toast(authButton.dataset.auth === "reset" ? "비밀번호 재설정 이메일을 보냈어요." : authButton.dataset.auth === "resend" ? "인증메일을 다시 보냈어요." : "처리되었습니다.");
     if (authButton.dataset.auth === "signup" && !result?.error) await ensureProfile(nickname);
     return;
   }
