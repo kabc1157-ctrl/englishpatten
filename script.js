@@ -1,3 +1,10 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./supabase-config.js";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+let currentUser = null;
+let profile = null;
+
 const patterns = [
   {level:"beginner",pattern:"I want to + verb",meaning:"~하고 싶어요",example:"I want to try the local food.",ko:"현지 음식을 먹어 보고 싶어요."},
   {level:"beginner",pattern:"I'd like to + verb",meaning:"정중하게 ~하고 싶어요",example:"I'd like to make a reservation.",ko:"예약하고 싶습니다."},
@@ -107,6 +114,72 @@ const state = {
   selectedWord: "eat"
 };
 
+const localProgress = JSON.parse(localStorage.getItem("saying.completedPatterns") || "[]");
+
+async function ensureProfile(nickname = "SAYING learner") {
+  if (!currentUser) return;
+  const { data } = await supabase.from("profiles").upsert({ id: currentUser.id, nickname, email: currentUser.email }, { onConflict: "id" }).select().single();
+  profile = data || profile;
+  if (profile) {
+    document.querySelector("#profile-nickname").textContent = profile.nickname;
+    document.querySelector("#profile-email").textContent = currentUser.email || "";
+    document.querySelector("#profile-level").value = profile.level;
+    document.querySelector("#profile-minutes").value = String(profile.default_minutes);
+  }
+}
+
+async function loadUserData() {
+  if (!currentUser) return;
+  await ensureProfile();
+  const { data: remote } = await supabase.from("user_pattern_progress").select("pattern_id").eq("user_id", currentUser.id);
+  const merged = new Set([...(remote || []).map(row => row.pattern_id), ...localProgress]);
+  if (localProgress.length) {
+    await supabase.from("user_pattern_progress").upsert([...merged].map(pattern_id => ({ user_id: currentUser.id, pattern_id, mastery_level: 1 })), { onConflict: "user_id,pattern_id" });
+  }
+  localStorage.setItem("saying.completedPatterns", JSON.stringify([...merged]));
+  const { data: diaries } = await supabase.from("daily_diaries").select("id, diary_date, original_text, korean_intent").order("diary_date", { ascending: false }).limit(20);
+  document.querySelector("#diary-list").innerHTML = (diaries || []).map(d => `<article class="diary-item"><small>${d.diary_date}</small><p>${escapeHtml(d.original_text)}</p>${d.korean_intent ? `<span>${escapeHtml(d.korean_intent)}</span>` : ""}</article>`).join("") || "<p class='auth-message'>저장된 일기가 없습니다.</p>";
+}
+
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[char])); }
+
+async function initAuth() {
+  const { data } = await supabase.auth.getUser();
+  currentUser = data.user;
+  updateAuthUI();
+  if (currentUser) await loadUserData();
+  supabase.auth.onAuthStateChange(async (_event, session) => { currentUser = session?.user || null; updateAuthUI(); if (currentUser) await loadUserData(); });
+}
+
+function updateAuthUI() {
+  const loggedIn = Boolean(currentUser);
+  document.querySelector("#auth-form [data-auth=login]").hidden = loggedIn;
+  document.querySelector("#auth-form [data-auth=signup]").hidden = loggedIn;
+  document.querySelector("#auth-form [data-auth=reset]").hidden = loggedIn;
+  document.querySelector("#auth-form [data-auth=logout]").hidden = !loggedIn;
+  document.querySelector("#auth-nickname").hidden = loggedIn;
+  document.querySelector("#auth-email").value = loggedIn ? (currentUser.email || "") : "";
+  document.querySelector("#auth-message").textContent = loggedIn ? "로그인 상태입니다. 진도와 일기를 계정에 저장합니다." : "로그인하지 않은 상태에서는 개인 데이터를 서버에 저장하지 않습니다.";
+}
+
+async function saveDiary() {
+  if (!currentUser) return toast("먼저 로그인해 주세요.");
+  const original_text = document.querySelector("#diary-text").value.trim();
+  const korean_intent = document.querySelector("#diary-intent").value.trim() || null;
+  if (!original_text) return;
+  const { error } = await supabase.from("daily_diaries").insert({ user_id: currentUser.id, original_text, korean_intent });
+  if (error) return toast(error.message);
+  document.querySelector("#diary-form").reset(); await loadUserData(); toast("영어 일기를 저장했어요.");
+}
+
+async function sendPartnerInvite() {
+  if (!currentUser) return toast("먼저 로그인해 주세요.");
+  const email = document.querySelector("#partner-email").value.trim();
+  const { error } = await supabase.rpc("request_partner_by_email", { target_email: email });
+  if (error?.message?.includes("PARTNER_NOT_FOUND")) return toast("상대방이 먼저 회원가입해야 합니다.");
+  toast(error ? error.message : "학습 파트너 초대를 보냈어요.");
+}
+
 const lessonSteps = [
   () => `<div class="lesson-meta"><span class="step-label">STEP 1 · PATTERN</span><button class="audio-button" type="button" data-audio>듣기 ▷</button></div><h1 id="learn-heading">I want to go home.</h1><p class="translation">나는 집에 가고 싶어요.</p><div class="pattern-focus"><span>오늘의 핵심 패턴</span><strong>I want to + 동사원형</strong></div><p class="explanation"><b>I want to</b> 뒤에 행동을 나타내는 동사원형을 붙이면, 내가 하고 싶은 일을 자연스럽게 말할 수 있어요.</p>${actions("이해했어요")}`,
   () => `<div class="lesson-meta"><span class="step-label">STEP 2 · CHANGE</span><span>단어 바꾸기</span></div><h1 id="learn-heading">I want to <span style="color:var(--primary)">${state.selectedWord}</span>.</h1><p class="translation">단어를 바꿔 문장을 소리 내어 읽어보세요.</p><div class="choice-list">${["eat","sleep","travel","learn English"].map(word => `<button type="button" data-word="${word}" class="${word===state.selectedWord?"selected":""}">${word}</button>`).join("")}</div>${actions("다음으로")}`,
@@ -138,7 +211,7 @@ function toast(message) {
   clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.remove("show"), 2200);
 }
 
-document.addEventListener("click", event => {
+document.addEventListener("click", async event => {
   const nav = event.target.closest("[data-nav]"); if (nav) { navigate(nav.dataset.nav); return; }
   const duration = event.target.closest("[data-minutes]");
   if (duration) {
@@ -155,7 +228,23 @@ document.addEventListener("click", event => {
     document.querySelector("#answer-feedback").innerHTML = `<div class="feedback" style="${correct ? "" : "background:var(--accent);color:var(--primary-dark)"}">${correct ? "좋아요! 자연스럽고 정확한 문장이에요." : "거의 다 왔어요. 예시: I want to learn English."}</div>`;
     document.querySelector("[data-next]").disabled = false; if (correct) input.setAttribute("aria-invalid", "false"); return;
   }
-  if (event.target.closest("[data-finish]")) { state.step = 0; localStorage.setItem("saying.step", 0); navigate("home"); toast("오늘의 학습을 완료했어요."); return; }
+  if (event.target.closest("[data-finish]")) { state.step = 0; localStorage.setItem("saying.step", 0); if (currentUser) await supabase.from("user_pattern_progress").upsert({ user_id: currentUser.id, pattern_id: 1, mastery_level: 1, completed_at: new Date().toISOString() }, { onConflict: "user_id,pattern_id" }); navigate("home"); toast("오늘의 학습을 완료했어요."); return; }
+  const authButton = event.target.closest("[data-auth]");
+  if (authButton) {
+    const email = document.querySelector("#auth-email").value.trim();
+    const password = document.querySelector("#auth-password").value;
+    const nickname = document.querySelector("#auth-nickname").value.trim() || "SAYING learner";
+    let result;
+    if (authButton.dataset.auth === "signup") result = await supabase.auth.signUp({ email, password, options: { data: { nickname }, emailRedirectTo: location.href } });
+    if (authButton.dataset.auth === "login") result = await supabase.auth.signInWithPassword({ email, password });
+    if (authButton.dataset.auth === "reset") result = await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.href });
+    if (authButton.dataset.auth === "logout") result = await supabase.auth.signOut();
+    if (result?.error) toast(result.error.message); else toast(authButton.dataset.auth === "reset" ? "비밀번호 재설정 이메일을 보냈어요." : "처리되었습니다.");
+    if (authButton.dataset.auth === "signup" && !result?.error) await ensureProfile(nickname);
+    return;
+  }
+  if (event.target.closest("#diary-form")) return;
+  if (event.target.closest("#partner-form")) return;
   if (event.target.closest("[data-audio]")) {
     if ("speechSynthesis" in window) { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance("I want to go home.")); } else toast("이 브라우저에서는 음성 재생을 지원하지 않아요."); return;
   }
@@ -178,6 +267,9 @@ document.addEventListener("click", event => {
     patternItem.classList.toggle("expanded", !expanded); return;
   }
 });
+
+document.querySelector("#diary-form")?.addEventListener("submit", event => { event.preventDefault(); saveDiary(); });
+document.querySelector("#partner-form")?.addEventListener("submit", event => { event.preventDefault(); sendPartnerInvite(); });
 
 document.addEventListener("keydown", event => {
   if ((event.key === "Enter" || event.key === " ") && event.target.matches(".pattern-item")) {
@@ -202,3 +294,4 @@ function renderPatterns(level = "all") {
 renderPatterns();
 document.querySelectorAll("[data-minutes]").forEach(btn => { const selected = Number(btn.dataset.minutes) === state.minutes; btn.classList.toggle("selected", selected); btn.setAttribute("aria-checked", selected); });
 document.querySelector("#resume-note").textContent = `약 ${state.minutes}분 · ${state.minutes === 10 ? 4 : 5}단계 학습`;
+initAuth();

@@ -31,8 +31,8 @@ SAYING.은 영어의 핵심 문장 패턴을 이해하고, 단어를 바꾸고, 
 - HTML5
 - CSS3 및 CSS Custom Properties
 - Vanilla JavaScript ES Modules
-- 브라우저 `localStorage` (MVP 진행 상태)
-- Supabase Auth/PostgreSQL/RLS 연결을 위한 `schema.sql`
+- 브라우저 `localStorage` (비로그인 임시 상태 및 로그인 전환 백업)
+- Supabase Auth/PostgreSQL/RLS 연결 (`supabase-config.js`, `supabase-migration.sql`)
 
 ```text
 .
@@ -56,13 +56,15 @@ python3 -m http.server 8080
 
 그 후 `http://localhost:8080`을 엽니다. Node.js가 있다면 `npx serve .`도 사용할 수 있습니다.
 
-## Supabase 연결 준비
+## Supabase 연결
 
 1. 별도의 Supabase 프로젝트를 생성합니다.
 2. SQL Editor에서 `schema.sql`을 실행합니다.
 3. 프로젝트 URL과 `anon` 공개 키를 별도 `config.js`에 둡니다. 이 파일은 공개 키만 포함하며 저장소 정책에 맞게 관리합니다.
 4. `service_role` 키는 절대로 브라우저 코드나 저장소에 넣지 않습니다.
-5. Supabase JS 클라이언트를 추가하고 현재 `localStorage` 상태를 인증 사용자 기반 쿼리로 교체합니다.
+5. `supabase-migration.sql`을 실행해 계정별 학습 세션·문제 답안·영어 일기·파트너 테이블을 추가합니다.
+6. 앱은 Supabase Auth로 이메일 회원가입·로그인·로그아웃·비밀번호 재설정을 처리합니다.
+7. 로그인하면 기존 `localStorage` 완료 패턴을 서버로 병합하고, 서버 기록을 다시 불러옵니다.
 6. 관리자 권한은 클라이언트 요청으로 변경하지 말고 SQL Editor 또는 신뢰된 서버에서만 설정합니다.
 
 `schema.sql`은 자신의 학습 세션·답안만 수정하도록 제한하고, 공개를 허용한 문장만 같은 학습방 구성원이 읽도록 하는 RLS의 출발점입니다. 운영 배포 전에는 Supabase의 최신 권장 사항에 맞춘 정책 테스트가 필요합니다.
@@ -103,6 +105,15 @@ python3 -m http.server 8080
 - 한글: Pretendard 우선, Noto Sans KR 폴백
 - 본문은 장식보다 가독성을 우선하며, 영어 패턴에는 Inter를 명시합니다.
 
+## 데이터 및 권한
+
+- `profiles`, `learning_progress`, `user_pattern_progress`: 계정별 기본 정보와 커리큘럼 진도
+- `learning_sessions`, `exercise_attempts`: 학습 시간·문제 답안·복습 여부
+- `daily_diaries`, `diary_feedback`, `saved_expressions`: 영어 일기와 피드백 저장 구조
+- `study_partners`, `partner_progress_summary`: 수락된 파트너에게만 요약 진도 제공
+- 모든 개인 테이블은 RLS를 사용하며, 일기와 상세 답안은 파트너에게 노출되지 않습니다.
+- AI API는 연결하지 않았습니다. `diary_feedback`는 향후 검수된 피드백을 저장할 구조입니다.
+
 ## 테스트
 
 브라우저에서 다음을 확인합니다.
@@ -113,11 +124,13 @@ python3 -m http.server 8080
 4. 학습 중 나갔다가 다시 들어오면 단계가 유지되는지
 5. 360px 모바일 폭과 데스크톱에서 내용이 잘리지 않는지
 6. Tab 키만으로 주요 버튼과 입력 요소에 접근 가능한지
+7. 두 계정으로 회원가입 후 파트너 초대·수락·요약 진도 조회가 되는지
+8. 다른 계정이 일기·상세 답안·진도 행을 직접 조회하거나 수정할 수 없는지
+9. 로그인 전 localStorage 완료 패턴이 로그인 후 계정 진도에 병합되는지
 
 ## 한계와 다음 단계
 
-- Supabase Auth 및 실제 데이터 쿼리 연결
-- 안전한 서버 함수 기반 초대 코드 발급·만료·사용 제한
+- Supabase Storage/Edge Function 기반 초대 이메일 발송
 - 콘텐츠 관리자 CRUD, 승인 이력, 역할 기반 정책
 - 100개 패턴 각각의 변형·작문·대화·복습 콘텐츠 확장 및 추가 원어민 검수
 - 간격 반복 알고리즘과 오답 기반 복습 일정
